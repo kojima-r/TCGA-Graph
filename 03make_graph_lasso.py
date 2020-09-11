@@ -23,7 +23,7 @@ def lasso_without_i(X,i,y,alpha):
     return model,w,b,xx,r2
 
 
-alpha=1.0
+alpha=10.0
 filename="data/ovary.2020-09-02.data.tsv"
 data = pd.read_csv(filename,sep='\t')
 x=data.iloc[:,4:]
@@ -35,9 +35,9 @@ print("[LOAD]",filename,":",X.shape)
 def process(i):
     result={}
     model,w,b,xx,r2=lasso_without_i(X,i,X[:,i],alpha)
-    idx=np.where(model.coef_>1.0e-10)[0]
+    idx=np.where(model.coef_>1.0e-6)[0]
     #result["model"]=model
-    result["w"]=w
+    result["w"]=w[idx]
     result["b"]=b
     result["r2"]=r2
     result["target"]=i
