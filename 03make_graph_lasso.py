@@ -45,7 +45,20 @@ print("[LOAD]",filename,":",X.shape)
 sc = StandardScaler()
 X = sc.fit_transform(X)
 os.makedirs(args.output,exist_ok=True)
+name, _ = os.path.splitext( os.path.basename(filename) )
+output_path=args.output+"/"+name+".scale."+str(alpha)+".pkl"
+with open(output_path, 'wb') as fp:
+    pickle.dump(sc,fp)
+
 def process(i):
+    ###
+    out_dir=args.output+"/"+name+".{:03}k".format(i//1000)+"/"
+    os.makedirs(out_dir,exist_ok=True)
+    output_path=out_dir+"result.{:06d}.".format(i)+str(alpha)+".pkl"
+    ###
+    if(os.path.exists(output_path)):
+        return
+    ###
     result={}
     model,w,b,x_next,r2=lasso_without_i(X,i,X[:,i],alpha)
     idx=np.where(model.coef_>1.0e-10)[0]
@@ -82,17 +95,13 @@ def process(i):
             subresult["expand"]=j
             subresult["selected"]=idx
             result["subresults"].append(subresult)
-    return result
+    ######
+    with open(output_path, 'wb') as fp:
+        pickle.dump(result,fp)
+    return
 
-p = Pool(32)
-results=p.map(process, list(range(nvar))[:1])
+p = Pool(8)
+p.map(process, list(range(nvar)))
 p.close()
 
-name, _ = os.path.splitext( os.path.basename(filename) )
-output_path=args.output+"/"+name+".result."+str(alpha)+".pkl"
-with open(output_path, 'wb') as fp:
-    pickle.dump(results,fp)
-output_path=args.output+"/"+name+".scale."+str(alpha)+".pkl"
-with open(output_path, 'wb') as fp:
-    pickle.dump(sc,fp)
 
